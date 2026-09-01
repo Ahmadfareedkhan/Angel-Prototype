@@ -72,7 +72,7 @@ export function useRealtime(): UseRealtimeReturn {
       // Create audio element inside user gesture for iOS autoplay policy
       const audio = document.createElement("audio");
       audio.autoplay = true;
-      audio.playsInline = true;
+      audio.setAttribute("playsinline", "");
       audioRef.current = audio;
 
       pc.ontrack = (event) => {
