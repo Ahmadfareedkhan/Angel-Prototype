@@ -52,3 +52,5 @@ coverage/
 
 
 .cursor
+# Local Netlify folder
+.netlify
