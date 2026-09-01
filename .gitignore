@@ -6,6 +6,8 @@ node_modules/
 # Next.js
 .next/
 out/
+AGENTS.md
+CLAUDE.md
 
 # Build
 build/
