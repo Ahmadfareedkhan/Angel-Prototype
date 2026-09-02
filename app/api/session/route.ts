@@ -69,6 +69,14 @@ export async function POST(request: NextRequest) {
     instructions,
     audio: {
       output: { voice },
+      input: {
+        turn_detection: {
+          type: "semantic_vad",
+          eagerness: "medium",
+          create_response: true,
+          interrupt_response: true,
+        },
+      },
     },
   });
 
