@@ -70,9 +70,14 @@ export async function POST(request: NextRequest) {
     audio: {
       output: { voice },
       input: {
+        noise_reduction: {
+          type: "far_field",
+        },
         turn_detection: {
-          type: "semantic_vad",
-          eagerness: "low",
+          type: "server_vad",
+          threshold: 0.75,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 700,
           create_response: true,
           interrupt_response: true,
         },
