@@ -12,13 +12,16 @@ export type RealtimeState =
 interface UseRealtimeReturn {
   state: RealtimeState;
   error: string | null;
+  isMuted: boolean;
   startSession: () => Promise<void>;
   endSession: () => void;
+  toggleMute: () => void;
 }
 
 export function useRealtime(): UseRealtimeReturn {
   const [state, setState] = useState<RealtimeState>("idle");
   const [error, setError] = useState<string | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -49,8 +52,19 @@ export function useRealtime(): UseRealtimeReturn {
 
   const endSession = useCallback(() => {
     cleanup();
+    setIsMuted(false);
     setState("disconnected");
   }, [cleanup]);
+
+  const toggleMute = useCallback(() => {
+    if (streamRef.current) {
+      const track = streamRef.current.getAudioTracks()[0];
+      if (track) {
+        track.enabled = !track.enabled;
+        setIsMuted(!track.enabled);
+      }
+    }
+  }, []);
 
   const startSession = useCallback(async () => {
     setState("connecting");
@@ -153,5 +167,5 @@ export function useRealtime(): UseRealtimeReturn {
     }
   }, [cleanup]);
 
-  return { state, error, startSession, endSession };
+  return { state, error, isMuted, startSession, endSession, toggleMute };
 }

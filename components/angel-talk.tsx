@@ -3,6 +3,7 @@
 import { useRealtime } from "@/hooks/use-realtime";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
+import { Mic, MicOff } from "lucide-react";
 import { useEffect, useState } from "react";
 
 function formatTime(seconds: number): string {
@@ -12,7 +13,7 @@ function formatTime(seconds: number): string {
 }
 
 export function AngelTalk() {
-  const { state, error, startSession, endSession } = useRealtime();
+  const { state, error, isMuted, startSession, endSession, toggleMute } = useRealtime();
   const [elapsed, setElapsed] = useState(0);
 
   useEffect(() => {
@@ -124,14 +125,28 @@ export function AngelTalk() {
               {formatTime(elapsed)}
             </p>
 
-            <Button
-              onClick={endSession}
-              variant="outline"
-              size="lg"
-              className="rounded-full px-8"
-            >
-              End
-            </Button>
+            <div className="flex gap-3 items-center">
+              <Button
+                onClick={toggleMute}
+                variant="outline"
+                size="icon"
+                className="h-14 w-14 rounded-full border-2"
+              >
+                {isMuted ? (
+                  <MicOff className="h-6 w-6 text-destructive" />
+                ) : (
+                  <Mic className="h-6 w-6" />
+                )}
+              </Button>
+              <Button
+                onClick={endSession}
+                variant="outline"
+                size="lg"
+                className="rounded-full px-8"
+              >
+                End
+              </Button>
+            </div>
           </motion.div>
         )}
 
