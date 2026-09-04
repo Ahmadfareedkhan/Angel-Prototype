@@ -72,7 +72,7 @@ export async function POST(request: NextRequest) {
       input: {
         turn_detection: {
           type: "semantic_vad",
-          eagerness: "medium",
+          eagerness: "low",
           create_response: true,
           interrupt_response: true,
         },
