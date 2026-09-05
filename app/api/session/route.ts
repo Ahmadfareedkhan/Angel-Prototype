@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 
   const model = process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1";
-  const voice = "coral";
+  const voice = "cedar";
   const sessionId = hashSessionId(nanoid());
 
   const sessionConfig = JSON.stringify({
