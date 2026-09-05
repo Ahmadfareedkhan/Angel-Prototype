@@ -160,7 +160,7 @@ export function AngelTalk() {
             className="flex flex-col items-center gap-6"
           >
             <p className="text-muted-foreground text-center text-lg">
-              Take care of yourself.
+              What&apos;s alive in you?
             </p>
             <Button
               onClick={startSession}
