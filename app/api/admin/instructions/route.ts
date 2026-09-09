@@ -13,15 +13,20 @@ export async function GET(request: NextRequest) {
   if (authError) return authError;
 
   try {
-    const stored = await getStoredInstructions();
-
-    if (stored && stored.trim().length > 0) {
-      return NextResponse.json({
-        instructions: stored,
-        source: "custom",
-      });
+    // Try stored instructions first (Netlify Blobs or local file)
+    try {
+      const stored = await getStoredInstructions();
+      if (stored && stored.trim().length > 0) {
+        return NextResponse.json({
+          instructions: stored,
+          source: "custom",
+        });
+      }
+    } catch (storeError) {
+      console.error("Failed to read stored instructions, falling back to file:", storeError);
     }
 
+    // Fall back to the default file
     const filePath = join(process.cwd(), "prompts", "angel.md");
     const fileContent = readFileSync(filePath, "utf-8").trim();
 
