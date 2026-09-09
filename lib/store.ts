@@ -5,7 +5,22 @@ import { join } from "path";
 const isNetlify = !!process.env.NETLIFY;
 
 // ---------------------------------------------------------------------------
-// Local‑dev fallback: JSON files in `.data/` (gitignored)
+// Netlify Blobs store helper
+// ---------------------------------------------------------------------------
+
+function getNetlifyStore(name: string) {
+  const siteID = process.env.SITE_ID;
+  const token = process.env.NETLIFY_API_TOKEN;
+
+  if (siteID && token) {
+    return getStore({ name, siteID, token });
+  }
+
+  return getStore(name);
+}
+
+// ---------------------------------------------------------------------------
+// Local-dev fallback: JSON files in `.data/` (gitignored)
 // ---------------------------------------------------------------------------
 
 function localPath(filename: string): string {
@@ -37,7 +52,7 @@ export async function getStoredInstructions(): Promise<string | null> {
     return localGet("instructions.txt");
   }
 
-  const store = getStore("angel-config");
+  const store = getNetlifyStore("angel-config");
   const value = await store.get(INSTRUCTIONS_KEY, { type: "text" });
   return value ?? null;
 }
@@ -48,7 +63,7 @@ export async function setStoredInstructions(content: string): Promise<void> {
     return;
   }
 
-  const store = getStore("angel-config");
+  const store = getNetlifyStore("angel-config");
   await store.set(INSTRUCTIONS_KEY, content);
 }
 
@@ -74,7 +89,7 @@ export async function saveFeedback(entry: FeedbackEntry): Promise<void> {
     return;
   }
 
-  const store = getStore("angel-feedback");
+  const store = getNetlifyStore("angel-feedback");
   await store.setJSON(entry.id, entry);
 }
 
@@ -85,7 +100,7 @@ export async function listFeedback(): Promise<FeedbackEntry[]> {
     return JSON.parse(readFileSync(p, "utf-8"));
   }
 
-  const store = getStore("angel-feedback");
+  const store = getNetlifyStore("angel-feedback");
   const { blobs } = await store.list();
   const entries: FeedbackEntry[] = [];
   for (const blob of blobs) {
