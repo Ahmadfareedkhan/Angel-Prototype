@@ -54,3 +54,6 @@ coverage/
 .cursor
 # Local Netlify folder
 .netlify
+
+# Local data store (dev-only persistence for admin edits / feedback)
+.data/

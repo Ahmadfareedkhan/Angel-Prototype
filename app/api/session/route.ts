@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
   let instructions: string;
   try {
-    instructions = getAngelInstructions();
+    instructions = await getAngelInstructions();
   } catch (error) {
     console.error("Instruction loading failed:", error);
     return NextResponse.json(
