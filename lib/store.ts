@@ -2,7 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "fs";
 import { join } from "path";
 
-const isNetlify = !!process.env.NETLIFY;
+const isNetlify = !!process.env.SITE_ID;
 
 // ---------------------------------------------------------------------------
 // Netlify Blobs store helper
