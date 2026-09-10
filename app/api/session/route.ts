@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
   }
 
   const model = process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1";
-  const voice = "cedar";
+  const voice = "ash";
   const sessionId = hashSessionId(nanoid());
 
   const sessionConfig = JSON.stringify({
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         },
         turn_detection: {
           type: "semantic_vad",
-          eagerness: "auto",
+          eagerness: "low",
           create_response: true,
           interrupt_response: true,
         },
