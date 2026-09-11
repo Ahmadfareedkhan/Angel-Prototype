@@ -4,7 +4,7 @@ import { createHash } from "crypto";
 import { getAngelInstructions } from "@/lib/instructions";
 import { checkRateLimit } from "@/lib/rate-limit";
 
-const OPENAI_REALTIME_URL = "https://api.openai.com/v1/realtime/calls";
+const OPENAI_LIVE_URL = "https://api.openai.com/v1/live/sessions";
 
 function hashSessionId(raw: string): string {
   return createHash("sha256").update(raw).digest("hex").slice(0, 32);
@@ -31,19 +31,20 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  let sdpOffer: string;
+  let body: { sdp?: string };
   try {
-    sdpOffer = await request.text();
+    body = await request.json();
   } catch {
     return NextResponse.json(
-      { error: "Failed to read SDP offer from request body" },
+      { error: "Invalid JSON body" },
       { status: 400 }
     );
   }
 
-  if (!sdpOffer || sdpOffer.trim().length === 0) {
+  const sdpOffer = body.sdp;
+  if (!sdpOffer || typeof sdpOffer !== "string" || sdpOffer.trim().length === 0) {
     return NextResponse.json(
-      { error: "Empty SDP offer" },
+      { error: "An SDP offer is required" },
       { status: 400 }
     );
   }
@@ -59,48 +60,56 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const model = process.env.OPENAI_REALTIME_MODEL || "gpt-realtime-2.1";
-  const voice = "ash";
+  const voice = process.env.ANGEL_VOICE || "ash";
   const sessionId = hashSessionId(nanoid());
 
-  const sessionConfig = JSON.stringify({
-    type: "realtime",
-    model,
-    instructions,
-    audio: {
-      output: { voice },
-      input: {
-        noise_reduction: {
-          type: "far_field",
-        },
-        turn_detection: {
-          type: "semantic_vad",
-          eagerness: "low",
-          create_response: true,
-          interrupt_response: true,
+  const requestBody = {
+    session: {
+      model: "gpt-live-1",
+      instructions: [
+        "You are Angel, a voice-first conversational companion.",
+        "Speak warmly and naturally, at an unhurried pace. Be calm, thoughtful, and present.",
+        "When a conversation begins, briefly introduce yourself and what you do. For example: 'Hi, I'm Angel. I'm here to listen and help you think something through. What's on your mind?' Keep it to one or two short sentences.",
+        "Keep individual responses short — one or two sentences when possible.",
+        "Ask one meaningful question at a time. Allow silence.",
+        "Do not sound like a therapist conducting an intake, an HR representative, or a customer-service script.",
+        "Backchannel policy: Use minimal backchannels. Acknowledge naturally without competing with the main response.",
+        "Interruption policy: Stop speaking when the user interrupts. Listen to what they say.",
+        "Delegate all reasoning and conversation guidance to the backend.",
+      ].join("\n"),
+      audio: {
+        output: { voice },
+      },
+      delegation: {
+        type: "responses" as const,
+        responses: {
+          model: "gpt-5.6-luna",
+          instructions,
+          reasoning: { effort: "medium" },
         },
       },
     },
-  });
-
-  const formData = new FormData();
-  formData.set("sdp", sdpOffer);
-  formData.set("session", sessionConfig);
+    transport: {
+      type: "webrtc" as const,
+      sdp: sdpOffer,
+    },
+  };
 
   let openaiResponse: Response;
   try {
-    openaiResponse = await fetch(OPENAI_REALTIME_URL, {
+    openaiResponse = await fetch(OPENAI_LIVE_URL, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
         "OpenAI-Safety-Identifier": sessionId,
       },
-      body: formData,
+      body: JSON.stringify(requestBody),
     });
   } catch (error) {
-    console.error("OpenAI Realtime API request failed:", error);
+    console.error("OpenAI Live API request failed:", error);
     return NextResponse.json(
-      { error: "Failed to connect to OpenAI Realtime API" },
+      { error: "Failed to connect to OpenAI Live API" },
       { status: 502 }
     );
   }
@@ -117,12 +126,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const sdpAnswer = await openaiResponse.text();
+  const result = await openaiResponse.json();
 
-  return new NextResponse(sdpAnswer, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/sdp",
-    },
-  });
+  return NextResponse.json(result, { status: 201 });
 }

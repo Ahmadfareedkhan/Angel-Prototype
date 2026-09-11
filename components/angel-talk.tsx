@@ -12,17 +12,38 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+function isReturningUser(): boolean {
+  try {
+    return localStorage.getItem("angel-visited") === "true";
+  } catch {
+    return false;
+  }
+}
+
+function markAsVisited(): void {
+  try {
+    localStorage.setItem("angel-visited", "true");
+  } catch {
+    // localStorage unavailable
+  }
+}
+
 type FeedbackRating = "positive" | "negative" | null;
 
 export function AngelTalk() {
   const { state, error, isMuted, startSession, endSession, toggleMute } = useRealtime();
   const [elapsed, setElapsed] = useState(0);
+  const [returning, setReturning] = useState(true);
 
   // Feedback state
   const [feedbackRating, setFeedbackRating] = useState<FeedbackRating>(null);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackSent, setFeedbackSent] = useState(false);
   const [feedbackSending, setFeedbackSending] = useState(false);
+
+  useEffect(() => {
+    setReturning(isReturningUser());
+  }, []);
 
   useEffect(() => {
     if (state !== "connected") {
@@ -50,6 +71,7 @@ export function AngelTalk() {
 
   // Reset feedback when starting a new session
   const handleStartSession = useCallback(async () => {
+    markAsVisited();
     setFeedbackRating(null);
     setFeedbackComment("");
     setFeedbackSent(false);
@@ -89,9 +111,20 @@ export function AngelTalk() {
             transition={{ duration: 0.3 }}
             className="flex flex-col items-center gap-6"
           >
-            <p className="text-muted-foreground text-center text-lg leading-relaxed max-w-xs">
-              A place to think something through.
-            </p>
+            {returning ? (
+              <p className="text-muted-foreground text-center text-lg leading-relaxed max-w-xs">
+                A place to think something through.
+              </p>
+            ) : (
+              <div className="flex flex-col items-center gap-3 max-w-xs">
+                <p className="text-muted-foreground text-center text-lg leading-relaxed">
+                  Angel is a voice companion to help you think something through.
+                </p>
+                <p className="text-muted-foreground text-center text-sm leading-relaxed">
+                  Press Talk, allow your microphone, and speak naturally. Angel will listen and respond.
+                </p>
+              </div>
+            )}
             <Button
               onClick={handleStartSession}
               size="lg"
