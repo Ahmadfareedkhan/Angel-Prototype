@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         responses: {
           model: "gpt-5.6-luna",
           instructions,
-          reasoning: { effort: "medium" },
+          reasoning: { effort: "high" },
         },
       },
     },
